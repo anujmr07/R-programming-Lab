@@ -1,0 +1,289 @@
+---
+title: "Experiment-6"
+output: html_document
+date: "2025-11-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+
+#1
+library(MASS)
+data(Boston)
+X = Boston
+X
+nr  = nrow(X)
+mx = apply(X,2, mean) # true mean (Population mean)
+sdx = apply(X,2 , sd) # true sd (Population Variance)
+
+
+
+
+```
+
+```{r}
+
+#2
+u0 = 6.2 #hypothesis
+alpha = 0.05
+r = X[,6]
+s = sample(1:nr, size = 40, replace = FALSE)
+sam = r[s]
+sam_mean = mean(sam)  # Sample statistic in this case
+z = (sam_mean - u0) / (sdx[6])/sqrt(size)  # z test assumes that true sd is known  # mean is u0 until we reject the null hypothesis 
+#z is the observation 
+p_value = 2*pnorm(abs(z), mean =0, sd = 1 , lower.tail = FALSE) # mean =0 and sd =1 because z is standardized in the above step
+print(p_value)
+
+if(p_value < 0.05){
+  sprintf("Reject Null Hypothesis : u0 = %f", u0)
+  
+}else{
+  sprintf("Accept Null Hypothesis : u0 = %f", u0)
+  
+}
+
+
+```
+```{r}
+#3
+p0= 0.5
+alpha = 0.05
+size = 40
+high_crime = (X$crim > median(X$crim))  # 0 --> low crime rate , 1--> high crime rate
+s = sample(1:nr, size = size , replace = FALSE)
+sam = high_crime[s]
+obs_propotion = mean(sam) # statistic in this case  # if we are taking mean then it is a gausian distribuation
+z = (obs_propotion - p0)/ sqrt(p0*(1-p0)/size)  # sqrt(p0*(1-p0)/size) --> sd (given in question)
+
+p_value = 2*pnorm(abs(z), mean = 0, sd =1, lower.tail = FALSE)
+
+print(p_value)
+
+if(p_value < 0.05){
+  sprintf("Reject Null Hypothesis : p0 = %f", p0)
+  
+}else{
+  sprintf("Accept Null Hypothesis : p0 = %f", p0)
+  
+}
+
+
+
+```
+```{r}
+#4
+d0 =0 # which says difference between the means as 0
+alpha = 0.05
+size = 20
+
+# form 2 sets
+s1 = X$medv[X$chas ==1] # prices of locations which are closer to charles river
+s2 = X$medv[X$chas ==0] # prices of locations which are fa away  to charles river
+
+s1_tm = mean(s1) # true mean for set s1
+s2_tm = mean(s2) # true mean for set s2
+
+s = sample(1:length(s1), size = size , replace = FALSE) # we have divide dataset into 2--> s1 and s2
+sam1= s1[s]# first set sample
+
+s = sample(1:length(s2), size = size , replace = FALSE) # we have divide dataset into 2--> s1 and s2
+sam2= s2[s]# second set sample
+
+d_obs = mean(sam1) - mean(sam2) # statistic in this case
+
+msam1_sd = sd(sam1)/sqrt(size)  # this is sigma /root(n) --> formula
+msam2_sd = sd(sam2)/sqrt(size)  # this is sigma /root(n) --> formula
+
+tot_sd = sqrt(msam1_sd^2+msam2_sd^2)
+
+#statistic is 0 mean ; sd = tot_sd= sd; Distribuation = Gaussian
+
+z = d_obs/tot_sd # Sacaled Statistic -->  not substracted by mena becaues mean is 0
+
+p_value = 2*pnorm(abs(z), mean = 0, sd =1, lower.tail = FALSE)
+
+print(p_value)
+
+if(p_value < 0.05){
+  sprintf("Reject Null Hypothesis : u0 = u1")
+  
+}else{
+  sprintf("Accept Null Hypothesis : u0 = u1")
+  
+}
+
+
+
+```
+
+```{r}
+#5
+
+#complet data set -- 2--> 1. location closet to river --p1 --> highertax / total sample
+#                         2. location closet to river  --p2 --> highertax / total sample
+#                        H0 will be p1 = p2
+
+#Two sample difference pf proportion z-test
+
+dp0 = 0 # difference between the portions as 0
+alpha = 0.05
+size = 20
+high_tax = (X$tax> median(X$tax))
+# form 2 sets
+s1 = high_tax[X$chas==1] # tax indicator variable with locations closer to river 
+s2 = high_tax[X$chas==0] # tax indicator variable with locations far away form  river
+tp_s1 = mean(s1)# true population proportion for s1
+tp_s2 = mean(s2)# true population proportion for s2
+
+s = sample(1:length(s1), size = size, replace = FALSE)
+sam1=s1[s] # sample 1
+s = sample(1:length(s2), size = size, replace = FALSE)
+sam2=s2[s] # sample 2
+
+obs_dp = mean(sam1) - mean(sam2) # statistic for this case
+sam1
+comb_p = mean(c(s1, s2)) # combined propotion of both sets 
+
+obs_sd = sqrt(comb_p*(1-comb_p)/size) # this is true under null hypothesis 
+
+z = obs_dp/obs_sd
+
+p_value = 2*pnorm(abs(z), mean = 0, sd =1, lower.tail = FALSE)
+
+print(p_value)
+
+if(p_value < 0.05){
+  sprintf("Reject Null Hypothesis that propotion fr both set is same  ")
+  
+}else{
+  sprintf("Accept Null Hypothesis that propotion fr both set is same ")
+  
+}
+
+
+```
+```{r}
+#6
+r= 0 #Null hypothesis that both variable are uncorrelated
+x1 = X$rm
+x2= X$medv
+true_r = cor(x1,x2) #population correlation
+s = sample(1:nr , size = size , replace = FALSE)
+s1 = x1[s] # samples for first  variable
+s2 = x2[s] # samples for second variable
+
+sam_r = cor(s1, s2) # statistic (Sample corelation)  # corelation --> is not a gausian we can convert it using Fisher Transformation 0.5*log((1+r)/(1-r)) 
+
+
+z_r = 0.5*log((1+sam_r)/(1-sam_r))
+
+sd_r = sqrt(1/(size-3))
+
+z = z_r/sd_r # Standardised Normal variable
+
+p_value = 2*pnorm(abs(z), mean = 0, sd =1, lower.tail = FALSE)
+
+print(p_value)
+
+if(p_value < 0.05){
+  sprintf("Reject Null Hypothesis that variables are un-corelated!! ")
+  
+}else{
+  sprintf("Accept Null Hypothesis that variables are un-corelated!! ")
+  
+}
+
+            
+
+```
+```{r}
+#7
+high_crime = (X$crim>median(X$crim))
+high_tax = (X$tax>median(X$tax))
+alpha = 0.05
+#Run chi square test --> check this 2 variables are independent or not 
+
+test = chisq.test(high_crime,high_tax)
+p_value = test$p.value
+print(p_value)
+
+if(p_value < 0.05){
+  sprintf("Reject Null Hypothesis that two  variables are independent ")
+  
+}else{
+  sprintf("Accept Null Hypothesis that two  variables are independent ")
+  
+}
+
+```
+
+```{r}
+#8.
+ 
+u0_values = c(5.0, 5.6, 6.2, 6.8, 7.4)
+
+alpha = 0.05
+
+r = X[,6]  # 'rm' column
+
+nr = nrow(X)
+
+s = sample(1:nr, size = 40, replace = FALSE)
+
+sam = r[s]
+
+sam_mean = mean(sam)
+
+sam_sd = sdx[6]   # using population SD
+
+results_step8 = data.frame(u0 = numeric(), z_value = numeric(), p_value = numeric(), Decision = character())
+
+for (u0 in u0_values) {
+
+  z = (sam_mean - u0) / (sam_sd / sqrt(40))
+
+  p_value = 2 * pnorm(abs(z), mean = 0, sd = 1, lower.tail = F)
+
+  decision = ifelse(p_value < alpha, "Reject H0", "Accept H0")
+
+  results_step8 = rbind(results_step8, data.frame(u0, z_value = round(z,3), p_value = round(p_value,4), Decision = decision))
+
+}
+
+print(results_step8)
+ 
+
+```
+```{r}
+#9.
+p0_values = c(0.2, 0.4, 0.6, 0.8)
+alpha = 0.05
+size = 40
+nr = nrow(X)
+high_crime = (X$crim > median(X$crim))
+s = sample(1:nr, size = size, replace = FALSE)
+sam = high_crime[s]
+obs_proportion = mean(sam)
+results_step9 = data.frame(p0 = numeric(), z_value = numeric(), p_value = numeric(), Decision = character())
+for (p0 in p0_values) {
+  sd = sqrt(p0 * (1 - p0) / size)
+  z = (obs_proportion - p0) / sd
+  p_value = 2 * pnorm(abs(z), mean = 0, sd = 1, lower.tail = F)
+  decision = ifelse(p_value < alpha, "Reject H0", "Accept H0")
+  results_step9 = rbind(results_step9, data.frame(p0, z_value = round(z,3), p_value = round(p_value,4), Decision = decision))
+}
+print(results_step9)
+```
+```{r}
+
+```
+

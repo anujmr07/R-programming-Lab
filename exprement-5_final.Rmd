@@ -1,0 +1,290 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+
+```{r}
+#1
+library(moments)
+ntrials = 10000
+nsamples=100 
+mx = numeric(ntrials)
+for(i in 1:ntrials){
+  #conduct a random experiment
+  #store results for each trial in a vector
+  x = numeric(nsamples)
+  for (j in 1:nsamples){
+    x[j] = runif(1,min=0,max=5) #random experiment
+  }
+  mx[i] = mean(x)#mean of 100 random variables
+}
+k=seq(min(mx), max(mx), by=0.001)
+gpdf = dnorm(k, mean = mean(mx) , sd = sd(mx))
+hist(mx,breaks=40,freq = FALSE)
+lines(k, gpdf, col="red")
+
+sprintf("skewness:%f",skewness(mx))
+sprintf("kurtosis: %f",kurtosis(mx))
+
+
+```
+
+```{r}
+#2
+library(moments)
+ntrials = 10000
+nsamples=100 
+mx = numeric(ntrials)
+for(i in 1:ntrials){
+  #conduct a random experiment
+  #store results for each trial in a vector
+  x = numeric(nsamples)
+  for (j in 1:nsamples){
+    x[j] = rexp(1, rate = 5) #random experiment -- > Exponential distribution (X~Exp(5)).
+  }
+  mx[i] = mean(x)#mean of 100 random variables
+}
+k=seq(min(mx), max(mx), by=0.001)
+gpdf = dnorm(k, mean = mean(mx) , sd = sd(mx))
+hist(mx,breaks=40,freq = FALSE)
+lines(k, gpdf, col="red")
+
+sprintf("skewness:%f",skewness(mx))
+sprintf("kurtosis: %f",kurtosis(mx))
+```
+```{r}
+#3
+library(moments)
+ntrials = 10000
+nsamples=100 
+mx = numeric(ntrials)
+for(i in 1:ntrials){
+  #conduct a random experiment
+  #store results for each trial in a vector
+  x = numeric(nsamples)
+  for (j in 1:nsamples){
+    x[j] = rnorm(1,mean = 0 , sd =5) #random experiment -- >  Gaussian distribution (X~N(0,5)).
+  }
+  mx[i] = mean(x)#mean of 100 random variables
+}
+k=seq(min(mx), max(mx), by=0.001)
+gpdf = dnorm(k, mean = mean(mx) , sd = sd(mx))
+hist(mx,breaks=40,freq = FALSE)
+lines(k, gpdf, col="red")
+
+sprintf("skewness:%f",skewness(mx))
+sprintf("kurtosis: %f",kurtosis(mx))
+
+```
+```{r}
+#4
+#y = X1+X2+.....+Xn
+library(moments)
+ntrials = 10000
+nsamples=100 
+mx = numeric(ntrials)
+for(i in 1:ntrials){
+  #conduct a random experiment
+  #store results for each trial in a vector
+  x = numeric(nsamples)
+  for (j in 1:nsamples){
+    s = sample(1:3,  size = 1) 
+    if(s ==1){
+      x[j]=runif(1, min=0, max=5)
+    }else if(s ==2){
+      x[j] = rexp(1, rate=5)
+      
+    }else{
+      x[j] = rnorm(1, mean =0 , sd =5)
+      
+    }
+    
+  }
+  mx[i] = mean(x)#mean of 100 random variables
+}
+k=seq(min(mx), max(mx), by=0.001)
+gpdf = dnorm(k, mean = mean(mx) , sd = sd(mx))
+hist(mx,breaks=40,freq = FALSE)
+lines(k, gpdf, col="red")
+
+sprintf("skewness:%f",skewness(mx))
+sprintf("kurtosis: %f",kurtosis(mx))
+
+
+```
+
+```{r}
+#6
+a =1.2
+b =2.1
+x = seq(1,5 , by = 0.001)
+y = numeric(length(x))
+for (j in 1:length(x)){
+  y[j]= a+b*x[j]+rnorm(1, mean =0, sd =2) # y = a+b(x) +d
+}
+plot(x,y)
+```
+```{r}
+#7
+train = as.data.frame(cbind(x,y))
+mymod = lm(y~x, data =  train) # feel free to take any model
+ypred = predict(mymode , train)
+me = mean(y-ypred)
+ea = mymod$coefficients[1]
+eb = mymod$coefficients[2]
+
+
+                
+```
+
+```{r}
+#8
+
+# Monte carlo on creating a random data and learning a linear regression model
+ntrials=1000
+v1=numeric(ntrials)
+v2=numeric(ntrials)
+v3=numeric(ntrials)
+for(i in 1:ntrials){
+  #Define Random experiment
+  #generating data
+  a =1.2
+b =2.1
+x = seq(1,5 , by = 0.001)
+y = numeric(length(x))
+for (j in 1:length(x)){
+  y[j]= a+b*x[j]+rnorm(1, mean =0, sd =2) # y = a+b(x) +d
+}
+#Learn a Linear regression model
+train=as.data.frame(cbind(x,y))
+mymod=lm(y~x,data=train)
+ypred=predict(mymod,train)
+v1[i]=mean(y-ypred)#Variable 1
+v2[i]=mymod$coefficients[1]#variable 2
+v3[i]=mymod$coefficients[2]#variable 3
+}
+```
+
+
+
+
+```{r}
+
+#check Gaussion Nature of v1
+k=seq(min(v1), max(v1) , by = 1e-17)
+gpdf = dnorm(k , mean = mean(v1) , sd = sd(v1))
+          
+hist(v1, breaks=40, freq= FALSE)
+lines(k , gpdf , col = "red")
+sprintf("skewness:%f",skewness(v1))
+sprintf("kurtosis is: %f",kurtosis(v1))
+```
+```{r}
+
+#check Gaussion Nature of v2
+k=seq(min(v2), max(v2) , by = 0.001)
+gpdf = dnorm(k , mean = mean(v2) , sd = sd(v2))
+          
+hist(v2, breaks=40, freq= FALSE)
+lines(k , gpdf , col = "red")
+sprintf("skewness:%f",skewness(v2))
+sprintf("kurtosis is: %f",kurtosis(v2))
+```
+```{r}
+#check Gaussion Nature of v3
+k=seq(min(v3), max(v3) , by = 0.001)
+gpdf = dnorm(k , mean = mean(v3) , sd = sd(v3))
+          
+hist(v3, breaks=40, freq= FALSE)
+lines(k , gpdf , col = "red")
+sprintf("skewness:%f",skewness(v3))
+sprintf("kurtosis is: %f",kurtosis(v3))
+```
+
+
+```{r}
+
+#5.
+ 
+library(moments)
+ntrials = 10000
+sample_sizes =10
+for(nsamples in sample_sizes){
+  mx = numeric(ntrials)
+  for(i in 1:ntrials){
+    x = runif(nsamples, 0, 5)
+    mx[i] = mean(x)
+  }
+  # Plot
+  hist(mx, breaks=40, freq=FALSE,
+       main=paste("Distribution of Means (nsamples =", nsamples, ")"),
+       col="gray", border="white")
+  k = seq(min(mx), max(mx), length.out=200)
+  lines(k, dnorm(k, mean(mx), sd(mx)), col="red", lwd=2)
+  cat("\nnsamples =", nsamples,
+      "\n Skewness:", skewness(mx),
+      "\n Kurtosis:", kurtosis(mx), "\n")
+}
+
+```
+```{r}
+#9.
+# Q9: Error term follows t-distribution (df = 3)
+library(moments)
+
+ntrials = 1000
+v1 = numeric(ntrials)  # mean of residuals
+v2 = numeric(ntrials)  # intercept (a)
+v3 = numeric(ntrials)  # slope (b)
+
+for (i in 1:ntrials) {
+  # generating the data
+  a = 1.2
+  b = 2.1
+  x = seq(1, 5, by = 0.001)
+  # error term from t-distribution
+  d = rt(length(x), df = 3)
+  y = a + b * x + d
+  # fit linear model
+  train = data.frame(x, y)
+  mymod = lm(y ~ x, data = train)
+  ypred = predict(mymod, train)
+  # store values
+  v1[i] = mean(y - ypred)
+  v2[i] = mymod$coefficients[1]
+  v3[i] = mymod$coefficients[2]
+}
+
+# ---- Plot and check Gaussian nature ----
+
+# Mean of residuals (v1)
+k = seq(min(v1), max(v1), length.out = 200)
+hist(v1, breaks = 40, freq = FALSE, main = "histogram (v1)",
+     col = "lightblue", border = "white")
+lines(k, dnorm(k, mean(v1), sd(v1)), col = "red", lwd = 2)
+print(sprintf("Residuals -> Skewness: %.5f  Kurtosis: %.5f", skewness(v1), kurtosis(v1)))
+
+# Intercept (v2)
+k = seq(min(v2), max(v2), length.out = 200)
+hist(v2, breaks = 40, freq = FALSE, main = "histogram (v2)",
+     col = "lightgreen", border = "white")
+lines(k, dnorm(k, mean(v2), sd(v2)), col = "red", lwd = 2)
+print(sprintf("Intercept -> Skewness: %.5f  Kurtosis: %.5f", skewness(v2), kurtosis(v2)))
+
+# Slope (v3)
+k = seq(min(v3), max(v3), length.out = 200)
+hist(v3, breaks = 40, freq = FALSE, main = "histogram (v3)",
+     col = "lightpink", border = "white")
+lines(k, dnorm(k, mean(v3), sd(v3)), col = "red", lwd = 2)
+print(sprintf("Slope -> Skewness: %.5f  Kurtosis: %.5f", skewness(v3), kurtosis(v3)))
+
+```
+```
+
+
+

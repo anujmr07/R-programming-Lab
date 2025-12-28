@@ -1,0 +1,140 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+x=rbinom(1,1,0.6)
+print(x)
+y=dbinom(1,1,0.6)
+print(y)
+p=0.6
+prob=c(1-p,p)
+print(prob)
+x_values=c(0,1)
+plot(x_values, prob, type='h', xlim=c(0,2), ylim=c(0,1), lwd=5, col="blue",
+     main="Bernoulli(0.6) PMF", xlab="x", ylab="P(X=x)")
+
+```
+```{r}
+x=rbinom(1,50,0.6)
+print(x)
+n=50
+outcomes = 0:n
+
+rv=vector("numeric", length = 51)
+for(i in outcomes){
+  rv[i+1] = dbinom(i,50,0.6)
+}
+
+plot(outcomes,rv,type='h',xlim=c(0,n+1),ylim=c(0,.2))
+```
+```{r}
+moment_ans=function(q){
+  s=0
+  for(i in outcomes){
+    s=s+(i^q)*rv[i+1]
+  }
+  return(s)
+}
+
+print((moment_ans(1)))# mean
+mvar = moment_ans(2)-((moment_ans(1))^2)
+print(mvar)
+```
+```{r}
+#question ->4
+
+Ti = 5
+t= 0.01
+n = Ti/t #500
+outcomes = 0:n
+
+rv = vector("numeric",length = n+1)
+for (i in outcomes){
+  rv[i+1]=dbinom(i,n,0.6)
+}
+
+moment_ans = function(q){
+  s=0
+  for(i in outcomes){
+    s = s+(i^q)*rv[i+1]
+  }
+  return(s)
+}
+
+mean= moment_ans(1)# mean
+mvar = moment_ans(2) - (moment_ans(1)^2)
+print(mean)
+print(mvar)
+
+# (c) Maximum requests in 𝑇T theoretically = 500 (all slots filled).But practically, requests will cluster around mean ± 3SD = 300 ± 3√120 ≈ (267, 333).So the server should plan for ≈ 330–335 requests in worst cases, not full 500.
+
+```
+```{r}
+# Question -> 5
+lamda1 <- 10   # you can change this to 20,30,40,50 as required
+
+x = rpois(1, lamda1)   # simulate one random value
+print(x)
+
+# define outcomes (Poisson is unbounded, but up to lamda1+4*sqrt(lamda1) is enough)
+outcomes = 0:ceiling(lamda1 + 4*sqrt(lamda1))
+
+rv = vector("numeric", length = length(outcomes))
+for(i in outcomes){
+  rv[i+1] = dpois(i, lambda = lamda1)   # PMF values
+}
+
+# plot PMF
+plot(outcomes, rv, type='h', lwd=2, col="blue",
+     main=paste("Poisson PMF (lambda =", lamda1, ")"),
+     xlab="X", ylab="P(X=x)")
+
+
+```
+
+```{r}
+e = vector("numeric", length = 10000)
+nc = 10:10009
+
+for (n in nc) {
+  outcomes = 0:n
+  rv = vector("numeric", length = n + 1)
+  for (i in outcomes) {
+    rv[i + 1] = dbinom(i, n, 0.6)
+  }
+
+  moment_ans = function(q) {
+    s = 0
+    for (i in outcomes) {
+      s = s + (i^q) * rv[i + 1]
+    }
+    return(s)
+  }
+
+  mean = moment_ans(1)   # Mean
+  lambda1 = mean
+  x = rpois(1, lambda1)
+
+  rv2 = vector("numeric", length = n + 1)
+  for (i in outcomes) {
+    rv2[i + 1] = dpois(i, lambda = lambda1)
+  }
+
+  e[n - 9] = mean(abs(rv - rv2))
+}
+
+plot(nc, e, type = "l")
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

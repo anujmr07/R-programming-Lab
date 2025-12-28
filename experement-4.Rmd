@@ -1,0 +1,134 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+
+
+```{r}
+#create a exprement and repeate it for many times
+samples = numeric(10000) # creates a vector of 10000 values 
+for (i in 1:10000){
+  x = rbinom(1,10,0.4)
+  samples[i] =x
+}
+```
+
+```{r}
+# Convert x to a zero mean and unit variance random variable y. Draw a Density histogram for y
+
+y=scale(samples) # scales --> converts samples into zero mean and unit variance
+hist(y, breaks=40, freq = FALSE)
+
+```
+```{r}
+#0Using the values in y, overlay a normal density function on the histogram in step 2
+k = seq(min(y), max(y), by=0.001)
+gpdf = dnorm(k,mean= mean(y) , sd = sd(y))
+hist(y, breaks=40, freq = FALSE)
+lines(k,gpdf,col="red")
+```
+```{r}
+n=50
+samples = numeric(10000) # creates a vector of 10000 values 
+for (i in 1:10000){
+  x = rbinom(1,n,0.4)
+  samples[i] =x
+}
+y=scale(samples)
+k = seq(min(y), max(y), by=0.001)
+gpdf = dnorm(k,mean= mean(y) , sd = sd(y))
+hist(y, breaks=40, freq = FALSE)
+lines(k,gpdf,col="red")
+
+```
+```{r}
+n=100
+samples = numeric(10000) # creates a vector of 10000 values 
+for (i in 1:10000){
+  x = rbinom(1,n,0.4)
+  samples[i] =x
+}
+y=scale(samples)
+k = seq(min(y), max(y), by=0.001)
+gpdf = dnorm(k,mean= mean(y) , sd = sd(y))
+hist(y, breaks=40, freq = FALSE)
+lines(k,gpdf,col="red")
+
+```
+
+```{r}
+n=1000
+samples = numeric(10000) # creates a vector of 10000 values 
+for (i in 1:10000){
+  x = rbinom(1,n,0.4)
+  samples[i] =x
+}
+y=scale(samples)
+k = seq(min(y), max(y), by=0.001)
+gpdf = dnorm(k,mean= mean(y) , sd = sd(y))
+hist(y, breaks=40, freq = FALSE)
+lines(k,gpdf,col="red")
+```
+
+```{r}
+#5 & 6
+
+df = read.csv("bikerental.csv")
+z = df[,13]
+Y= scale(z) #data
+k=seq(min(y), max(y), by=0.001)
+gpdf= dnorm(k,mean = mean(Y), sd = sd(Y)) 
+hist(y, breaks = 40 , freq = FALSE) # if it not dalse we can not add one more graph on it
+lines(k,gpdf, col="red")
+```
+
+```{r}
+#7
+# feature selection
+X = df[,1:12]
+Xs = scale(X)
+mcor = numeric(11)
+for(i in 1:11){
+  mcor[i] = abs(cor(Xs[,i],Y)) # abs --> ignore signs because -ve corelation is also a relation
+}
+st = order(mcor, decreasing =  TRUE)
+st2 =st[1:2]#indexis of 2 lines
+print(st2)
+
+
+```
+```{r}
+nr  =nrow(Xs)
+Xc = Xs[, st2] #two features with maximum correlation
+ndata = data.frame(cbind(Y,Xc))
+s = sample(1:nr, size = 0.8*nr, replace = FALSE)
+traindata = ndata[s,]
+testdata = ndata[-s,]
+
+mymod = lm(V1~.,data = traindata)
+ytrainpred = predict(mymod, traindata)
+ytestpred = predict(mymod, testdata)
+
+train_mae = mean(abs(ytrainpred-traindata[,1]))
+test_mae = mean(abs(ytestpred-testdata[,1]))
+
+sprintf("train MAE :%f", train_mae)
+sprintf("test MAE :%f", test_mae)
+
+
+
+```
+
+```{r}
+e = ytrainpred-traindata[,1]
+k = seq(min(e),max(e),by=0.001)
+gpdf = dnorm(k, mean=mean(e) , sd = sd(e))
+hist(e,breaks = 40 , freq=FALSE)
+lines(k,gpdf, col="red")
+
+
+```
+

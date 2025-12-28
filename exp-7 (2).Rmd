@@ -1,0 +1,218 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+setwd("C:\\Users\\MSIS\\Documents\\APS")
+
+```
+
+
+```{r}
+#1
+library(dplyr)
+X = read.csv("C:\\Users\\MSIS\\Documents\\APS\\MovieLens.csv")
+count_users = count(X , User)
+keep_users = count_users[count_users$n>5,]
+x = filter(X, User %in% keep_users$User)
+
+```
+
+```{r}
+#2
+Xm = mutate(X,timestamp2 = as.POSIXct(X$timestamp,origin="1970-01-01" , t2 = "UTC"))
+Xm_group = group_by(Xm, User)
+Xm_increase = arrange(Xm_group, Xm_group$timestamp2, by_group = TRUE) # used for arranging the row order in increasing or decreasing order
+nr = nrow(count_users) # total number of users
+train_list = list()
+test_list = list()
+
+for(i in 1:nr){
+  userid = keep_users[i,1]
+  usercount = keep_users[i,2]
+  temp = Xm_increase[Xm_increase$User == userid,]
+  train_list[[i]] = temp[1:usercount-1,]
+  test_list[[i]] = temp[usercount,]
+  
+}
+
+trainset = bind_rows(train_list) # converting to data frame
+testset = bind_rows(test_list) # converting to data frame
+```
+
+```{r}
+#3 
+#(EDA-1)
+summary(trainset$rating)
+
+#EDA-2
+keep_users2 = arrange(keep_users,desc(keep_users))
+print(keep_users2)
+
+#EDA-3
+movie_count = count(X, item)
+movie_count = arrange(movie_count, desc(movie_count$n))
+print(movie_count)
+```
+
+```{r}
+#4
+#Model A
+movie_count = arrange(movie_count,movie_count$item)
+nr = nrow(movie_count)
+c = 20
+bayes_score = numeric(nr) # zero vector of size nr
+for(i in 1:nr){
+  num = c*mean(trainset$rating) + movie_count[i,2] * mean(trainset[trainset$item==i,]$rating)
+  den=c+movie_count[i,2]
+  bayes_score[i] = num/den
+}
+movie_count2 = cbind(movie_count, bayes_score)
+movie_count2d = arrange(movie_count2, desc(movie_count2$bayes_score))
+```
+
+```{r}
+#5
+
+calulaterecommendationA = function(u){
+  #Returns a data frame containing recommendations and rank
+  r = data.frame(matrix(0, nrow = 10,  ncol = 2))
+  #column 1 : movie id; column 2: recommendation rank
+  h=1
+  g=1
+  while(g<=10){
+    if(movie_count2d[h,1] %in% trainset[trainset$User == u,2]){
+      h = h+1
+    }else{
+      r[g,1] = movie_count2d[h,1]
+      r[g,2] = g
+      g = g+1
+      h = h+1
+    }
+  }
+  return(r)
+}
+#Predicting on test set based on movie_count2d
+n = nrow(testset)
+hitA = numeric(n)
+k=10 # number of recommendations
+for(i in 1:n){
+  ui = testset[i,1]# user id to predict for 
+  tm = testset[i,2] # target movie
+  # function a takes user id as inputs and returns the recommendations
+  nA = calulaterecommendationA(ui) # nA is a data frame
+  if(tm %in% nA[,1]){
+    hitA[i] = 1
+  }
+}
+```
+
+
+```{r}
+#6
+#model B
+library(reshape2)
+ui_mat = acast(trainset, User~item, value.var = "rating")
+rmeans = rowMeans(ui_mat, na.rm = TRUE)
+ui_norm = ui_mat
+for(i in 1:nrow(ui_mat)){
+  #to remove bias in dataset
+  ui_norm[i,] = ui_norm[i,]-rmeans[i]
+}
+ui_norm[is.na(ui_norm)] =0
+
+sim = cor(ui_norm)
+
+# Model B (continued)
+ 
+sim[is.na(sim)] = 0     # Replace NA similarities with 0
+ 
+calculaterecommendationB = function(u){
+  # u = userid in testset
+  uid = as.character(u)
+  # user vector from normalized UI matrix
+  user_vector = ui_norm[uid, ]
+ 
+  # similarity-weighted score for each movie
+  score = as.numeric(sim %*% user_vector)
+  names(score) = colnames(ui_norm)
+ 
+  # movies already rated by user in trainset
+  rated_items = which(!is.na(ui_mat[uid, ]))
+  # do not recommend already-rated movies
+  if(length(rated_items) > 0){
+    score[rated_items] = -Inf
+  }
+ 
+  # pick top-10 movie IDs
+  top10 = names(sort(score, decreasing = TRUE))[1:10]
+ 
+  r = data.frame(matrix(0, nrow=10, ncol=2))
+  colnames(r) = c("item", "rank")
+  r[,1] = as.numeric(top10)
+  r[,2] = 1:10
+  return(r)
+}
+```
+
+
+```{r}
+# Q 7
+# Evaluation for Model B
+ 
+n = nrow(testset)
+hitB = numeric(n)
+ 
+for(i in 1:n){
+  ui = testset[i,1]  # user id
+  tm = testset[i,2]  # target movie
+  recB = calculaterecommendationB(ui)
+ 
+  if(tm %in% recB[,1]){
+    hitB[i] = 1
+  }else{
+    hitB[i] = 0
+  }
+}
+ 
+hitrateB = mean(hitB)
+print(hitrateB)
+```
+
+```{r}
+# 8.
+# Two-sample Difference of Proportion Test (HitRate@10)
+ 
+# number of users in test set
+nA = length(hitA)
+nB = length(hitB)
+ 
+# sample proportions
+pA = mean(hitA)     # HitRate@10 of Model A
+pB = mean(hitB)     # HitRate@10 of Model B
+ 
+# pooled proportion for z-test
+p_pool = (sum(hitA) + sum(hitB)) / (nA + nB)
+ 
+# standard error
+SE = sqrt(p_pool * (1 - p_pool) * (1/nA + 1/nB))
+ 
+# z statistic
+z_stat = (pA - pB) / SE
+ 
+# two-sided p-value
+p_value = 2 * (1 - pnorm(abs(z_stat)))
+ 
+cat("Model A HitRate =", pA, "\n")
+cat("Model B HitRate =", pB, "\n")
+cat("Z-statistic =", z_stat, "\n")
+cat("p-value =", p_value, "\n")
+ 
+# Conclusion
+if (p_value < 0.05) {
+  cat("Conclusion: Reject H0. At α = 0.05, the HitRate@10 of the two models is significantly different.\n")
+} else {
+  cat("Conclusion: Fail to reject H0. At α = 0.05, the performance of Model A and Model B is statistically similar.\n")
+}
+```
+

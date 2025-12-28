@@ -1,0 +1,175 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+x = rbinom(1,1,0.6)
+print(x)
+```
+```{r}
+y = dbinom(1,1,0.6)
+print(y)
+```
+```{r}
+p=0.6
+prob = c(1-p,p)
+x_values = c(0,1)
+plot(x_values,prob,type='h',xlim = c(0,2),ylim=c(0,1))
+```
+```{r}
+x = rbinom(1,50,0.6)
+print(x)
+n = 50
+outcomes = 0:n
+rv = vector("numeric",length = 51)
+for(i in outcomes){
+  rv[i+1]=dbinom(i,50,0.6)
+}
+plot(outcomes,rv,type='h',xlim = c(0,n+1),ylim=c(0,0.2
+                                                 ))
+```
+```{r}
+moment.ans = function(q){
+  s=0
+  for(i in outcomes){
+    s = s+(i^q*rv[i+1])
+  }
+  return(s)
+}
+print(moment.ans(1))
+mvar = moment.ans(2)-(moment.ans(1)^2)
+print(mvar)
+```
+```{r}
+Ti = 5
+t = 0.2
+n = Ti/t
+outcomes = 0:n
+rv = vector("numeric",length = n-1)
+for(i in outcomes){
+  rv[i+1]=dbinom(i,n,0.4)
+}
+
+moment_ans = function(q){
+  s=0
+  for(i in outcomes){
+    s = s+(i^q*rv[i+1])
+  }
+  return(s)
+}
+
+mean = moment_ans(1)
+mvar = moment_ans(2)-moment_ans(1)^2
+print(mean)
+print(mvar)
+```
+
+```{r}
+# Q4: Server request simulation
+
+# Parameters
+n <- 25 # number of small intervals (you can try 100, 500, 1000)
+p_server <- 0.4
+
+# (a) Simulate multiple experiments
+server_samples <- rbinom(10000, size=n, prob=p_server)
+
+# Estimate probability distribution
+outcomes <- 0:n
+rv_server <- dbinom(outcomes, size=n, prob=p_server)
+
+# Plot PMF
+plot(outcomes, rv_server, type='h', col="darkblue", lwd=2,
+     main=paste("PMF: Requests in T (n=", n, ")", sep=""),
+     xlab="Number of Requests", ylab="Probability")
+
+```
+```{r}
+# (b) Expected value and variance
+expected_requests <- n * p_server
+variance_requests <- n * p_server * (1 - p_server)
+
+cat("Expected Requests =", expected_requests, "\n")
+cat("Variance =", variance_requests, "\n")
+
+```
+```{r}
+# (c) Interpretation
+# Let's check approximate max requests in simulations
+max_requests <- max(server_samples)
+cat("Maximum requests observed in simulation =", max_requests, "\n")
+
+# Compare with theoretical mean + 3*sd (rule of thumb)
+sd_requests <- sqrt(variance_requests)
+cat("Mean + 3*SD =", expected_requests + 3*sd_requests, "\n")
+
+```
+```{r}
+# Q5: Poisson PMFs with different lambda values
+lambda_values <- c(10,20,30,40,50)
+
+par(mfrow=c(3,2))  # 3x2 grid of plots
+
+for (lam in lambda_values) {
+  outcomes <- 0:(lam+30)   # cover enough range for visualization
+  rv_pois <- dpois(outcomes, lambda=lam)
+  
+  plot(outcomes, rv_pois, type='h', lwd=2, col="darkred",
+       main=paste("Poisson PMF (λ =", lam, ")"),
+       xlab="X", ylab="P(X=x)")
+  points(outcomes, rv_pois, pch=16, col="red")
+}
+par(mfrow=c(1,1)) # reset layout
+
+```
+```{r}
+# From Q4, we had n = 25, p = 0.4
+n <- 25
+p <- 0.4
+lambda_binom <- n * p
+lambda_binom
+# Compare Binomial(n=25,p=0.4) with Poisson(λ=10)
+outcomes <- 0:(lambda_binom+20)
+rv_binom <- dbinom(outcomes, size=n, prob=p)
+rv_pois <- dpois(outcomes, lambda=lambda_binom)
+
+plot(outcomes, rv_binom, type="h", lwd=2, col="blue",
+     main="Binomial vs Poisson(λ=10)",
+     xlab="X", ylab="Probability")
+points(outcomes, rv_pois, type="p", col="red", pch=16)
+legend("topright", legend=c("Binomial(25,0.4)", "Poisson(10)"),
+       col=c("blue","red"), lwd=2, pch=c(NA,16))
+
+
+```
+
+```{r}
+# Q7: Error vs n plot (validation of Poisson approx)
+
+lambda <- 10
+n_values <- c(10, 20, 50, 100, 200, 500, 1000)
+errors <- c()
+
+for (n in n_values) {
+  p <- lambda / n   # keep mean fixed at λ
+  outcomes <- 0:(lambda+30)
+  
+  rv_binom <- dbinom(outcomes, size=n, prob=p)
+  rv_pois  <- dpois(outcomes, lambda=lambda)
+  
+  # compute L1 error
+  err <- sum(abs(rv_binom - rv_pois))
+  errors <- c(errors, err)
+}
+
+# Plot Error vs n
+plot(n_values, errors, type="b", lwd=2, pch=16, col="blue",
+     main="Error vs n (Binomial → Poisson Approximation)",
+     xlab="n (number of trials)", ylab="Error (|Binomial - Poisson|)")
+
+# Add grid for clarity
+grid()
+
+```
+
+

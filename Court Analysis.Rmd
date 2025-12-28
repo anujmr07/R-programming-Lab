@@ -1,0 +1,119 @@
+---
+title: "Court Decision Analysis"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+editor_options:
+  chunk_output_type: inline
+---
+
+#### Execute the following cells to load the libraries
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+
+#### Load the court dataset
+
+<!-- courtData$Judge.A -->
+<!-- courtData[,"Judge.A"] -->
+<!-- courtData[['Judge.A']] -->
+####These are some of the ways one can right the courtData
+
+sum(courtData$Judge.A)
+[1] 9478
+> sum(courtData$Judge.A)/nrow(courtData)
+[1] 0.9478
+> nrow(courtData)
+[1] 10000
+> mean(courtData$Judge.A)
+[1] 0.9478
+
+Thsese tell that the judge-A is 95% correct
+
+
+1 - apply(courtData, 2 , mean)
+P = rbind(1- apply(courtData, 2 , mean), apply(courtData,2,mean))
+P
+```{r echo=TRUE}
+# Exampe below one
+# s = c(0,1)
+# P= matrix(c(0.05,0.95,0.05,0.95,0.1,0.9,0.1,0.9,0.2,0.8),nrow =2,ncol=5)
+# print(P)
+# 
+# decision = vector('integer',5)
+
+# Taking data from csv file
+file = 'Data/court.csv'
+courtData = read.csv(file, header = T)
+
+# apply(courtData, 2 , mean) #Total percentage the judges are correct 2 means col-by-col
+# head(courtData,5) # 0 incorrect decision and 1 =correct decision
+# 1 - apply(courtData, 2 , mean) # Total pecentage the judge ae wong
+
+s=c(0,1)
+P = rbind(1- apply(courtData, 2 , mean), apply(courtData,2,mean))
+P
+```
+
+#### User-defined function to simulate one trial of the random experminet which is to simulate the courts decision for one unseen petition
+```{r}
+simTrial = function(){
+  # vector to store the judge decision
+  decision = vector('integer',5)
+  
+  #Run over each judge
+  for(j in c(1:5)){
+    #simulate the Judge-j decision and store it
+    decision[j]= sample(s,size = 1 , prob = P[,j])
+  }
+  
+  #Judge E copies Judge-A
+  decision[5] =  decision[1]
+  return(decision)
+}
+
+```
+####Function to check if court has made an incorrect decision one petition (i.e, one trial of the random experiment)
+
+```{r}
+simulations = 1e5
+simulatedData = replicate(simulations,simTrial())
+
+
+checkEvent = function(data){
+  return (sum(data)<3) 
+}
+```
+
+#### Call the checkEvent function apply mean so that we can check what is the incorrect percentage of courts decision is done
+
+```{r}
+#Fraction of times the court has made an incorrect decisions
+mean(apply(simulatedData,2,checkEvent)) 
+
+```
+
+#### User-defined function to simulate the court's decision
+
+```{r}
+
+```
+
+#### Court incorrect probability
+
+```{r}
+# Simulate the court's decision on several unseen petitions
+simulatedData = ?
+
+# Fraction of times the court has made a correct decision
+?
+
+# Fraction of times the court has made an incorrect decision
+?
+```
+

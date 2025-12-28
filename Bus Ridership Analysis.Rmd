@@ -1,0 +1,73 @@
+---
+title: "Bus Ridership Analysis"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+editor_options:
+  chunk_output_type: inline
+---
+
+#### Create a vector s1 whose elements correspond to the number of passengers who can possibly get on board the bus at a particular stop.
+```{r}
+s1 = c(0,1,2)
+```
+
+####Create a vector p1 whose elements correspond to the respective chances of the number of
+passengers identified in the previous question getting on board the bus at a particular stop.
+```{r}
+p1 = c(0.5,0.4,0.1)
+```
+
+####Create a matrix P such that the jth column of this matrix should have a passenger on the
+bus’s continuing-on and getting-off chances for the jth stop for j = 1, . . . , 10.
+```{r}
+P = matrix(c(0.99, 0.01, 0.2, 0.8, 0.2, 0.8, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.2,0.8, 0.2, 0.8, 0.0,1.0),nrow = 2 , ncol = 10)
+P
+```
+#### Create a 2-vector s2 whose elements correspond to the encoded versions of a passenger staying on the bus and getting off of the bus at a particular stop, respectively.
+```{r}
+
+s2 = c(0,1)
+```
+
+#Getting a sample size 
+```{r}
+sample(s1, size = 10, replace = T, prob = p1)
+```
+
+####Explain what the following R code helps us achieve in reference to the bus-ridership process:
+
+
+```{r}
+
+n = 30 # zero passengers in the bus at stop 1
+for (j in 1:9){
+  # simulating continuing or getting off of the bus 
+  if (n > 0){ #  if there is at least one passengers in the bus
+  n = n - sum(sample(s2, size = n, replace = TRUE, prob = P[, j])) #Simulating/Updating current passengers - the no of passengers getting off the bus at the j-th stop
+  }
+  # Update the current no of passenger in the bus  by adding the no of passengers that board the bus at the j-th stop
+  n = n + sample(s1, size = 1, replace = FALSE, prob = p1)
+  cat(sprintf("No of Passengers after the stop-%d = %d\n",j,n))
+}
+
+```
+
+```{r}
+
+table_a = paste0('A',c(1:10))
+S1 = c('A1','A2')
+S2 = c(paste0('A',c(3:10)),paste0('B',c(1:10)))
+P1 = c(0.5,0.5)
+P2 = replicate(18,1/18)
+S1
+S2
+sample(S1,size=1,prob=P1)
+sample(S2,size=1,prob=P2)
+c(sample(S1,size=1,prob=P1),sample(S2,size=1,prob=P2))
+c()
+```
+
+
